@@ -53,7 +53,7 @@ function CountdownBlock({ label, value }: { label: string; value: number }) {
           <span className="text-white text-lg sm:text-xl md:text-2xl font-bold">{str[1]}</span>
         </div>
       </div>
-      <span className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap">{label}</span>
+      <span className="text-white text-[10px] sm:text-xs whitespace-nowrap">{label}</span>
     </div>
   )
 }
@@ -196,9 +196,9 @@ const leaderboard: Winner[] = [
 
 function WinnerCard({ winner, rankClass, size = "normal" }: { winner: Winner; rankClass: "rank-1" | "rank-2" | "rank-3"; size?: "compact" | "normal" | "big" }) {
   const pad = size === "big" ? "p-6" : size === "compact" ? "p-2 sm:p-3" : "p-4"
-  const nameSize = size === "big" ? "text-xl" : size === "compact" ? "text-sm sm:text-base" : "text-lg"
+  const nameSize = size === "big" ? "text-lg" : size === "compact" ? "text-sm sm:text-base" : "text-lg"
   const totalPlayedSize = size === "big" ? "text-base" : size === "compact" ? "text-xs sm:text-sm" : "text-sm"
-  const cardMinH = size === "big" ? "min-h-[240px]" : size === "compact" ? "min-h-[140px] sm:min-h-[180px]" : "min-h-[200px]"
+  const cardMinH = size === "big" ? "min-h-[210px]" : size === "compact" ? "min-h-[140px] sm:min-h-[180px]" : "min-h-[200px]"
   return (
     <div className={`relative ${rankClass === "rank-1" ? "md:-translate-y-4 lg:-translate-y-5" : ""}`}>
       <Card className={`winner-card ${rankClass} rounded-2xl overflow-hidden shadow-md ${cardMinH}`}>
@@ -221,8 +221,9 @@ function WinnerCard({ winner, rankClass, size = "normal" }: { winner: Winner; ra
           </div>
           <h6 className={`text-white font-semibold ${nameSize} mb-2 text-break`}>{winner.name}</h6>
           <div className="mb-2">
-            <span className="text-muted-foreground/80 text-sm block">Total Played</span>
-            <h6 className={`text-white font-medium ${totalPlayedSize}`}>{winner.totalPlayed}</h6>
+            {/* text-muted-foreground/55  */}
+            <span className="text-sm block">Total Played</span>
+            <h6 className={`text-white/80 font-medium ${totalPlayedSize}`}>{winner.totalPlayed}</h6>
           </div>
           <div className="played-box mt-1">
             <span className="text-white font-medium text-sm block">{winner.placeLabel}</span>
@@ -295,16 +296,22 @@ export default function WeeklyRacePage() {
         <section className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-6">
           {/* Left: Top 3 */}
           <div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-              <div className="order-1 sm:order-2">
-                <WinnerCard winner={topWinners[0]} rankClass="rank-1" size="compact" />
+            {/* Mobile layout: 1st big on top, 2nd/3rd side-by-side */}
+            <div className="grid grid-cols-1 gap-3 mt-2 lg:hidden">
+              <div>
+                <WinnerCard winner={topWinners[0]} rankClass="rank-1" size="big" />
               </div>
-              <div className="order-2 sm:order-1">
+              <div className="grid grid-cols-2 gap-3">
                 <WinnerCard winner={topWinners[1]} rankClass="rank-2" size="compact" />
-              </div>
-              <div className="order-3 sm:order-3">
                 <WinnerCard winner={topWinners[2]} rankClass="rank-3" size="compact" />
               </div>
+            </div>
+
+            {/* Desktop layout: three cards side-by-side with 1st in middle */}
+            <div className="hidden lg:grid grid-cols-3 gap-3 mt-2">
+              <WinnerCard winner={topWinners[1]} rankClass="rank-2" size="normal" />
+              <WinnerCard winner={topWinners[0]} rankClass="rank-1" size="normal" />
+              <WinnerCard winner={topWinners[2]} rankClass="rank-3" size="normal" />
             </div>
           </div>
 
@@ -327,21 +334,21 @@ export default function WeeklyRacePage() {
 
         {/* Leaderboard List */}
         <section>
-          <div className="grid gap-3">
-            {/* Header row */}
+          <div className="grid gap-2 sm:gap-3">
+            {/* Header row aligned to content columns */}
             <div className="flex items-center px-4 py-3 rounded-xl border-2 border-yellow-500 bg-gradient-to-r from-yellow-400 to-yellow-600">
-              <div className="w-16 text-center text-sm font-semibold text-black/80"> </div>
-              <div className="flex-1 flex items-center justify-between">
+              <div className="w-8 sm:w-16 text-center text-sm font-semibold text-black/80"> </div>
+              <div className="flex-1 grid grid-cols-[1.6fr_1.2fr_72px] sm:grid-cols-[1.4fr_1.1fr_110px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 sm:gap-3 lg:gap-2">
                 <div className="text-sm font-semibold text-black">User</div>
-                <div className="text-sm font-semibold text-black">Total Played</div>
-                <div className="text-sm font-semibold text-black">Prize</div>
+                <div className="text-sm font-semibold text-black text-left lg:text-center lg:justify-self-center">Total Played</div>
+                <div className="text-sm font-semibold text-black text-center lg:text-right lg:justify-self-end">Prize</div>
               </div>
             </div>
 
             {leaderboard.map((w, idx) => (
                 <div
                   key={w.name}
-                  className="relative flex items-center px-4 py-3 rounded-xl overflow-hidden"
+                  className="relative flex items-center px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl overflow-hidden"
                   style={{
                     backgroundImage: 'url("/add/mascot rainbow background.jpg")',
                     backgroundPosition: 'center',
@@ -349,22 +356,30 @@ export default function WeeklyRacePage() {
                     backgroundRepeat: 'no-repeat',
                   }}
                 >
+                  {/* Subtle dark overlay to improve text contrast over patterned background */}
+                  {/* <div className="absolute inset-0 bg-black/30" /> */}
                   {/* Place label */}
-                  <div className="w-16 text-center text-sm font-semibold text-yellow-300">{w.placeLabel}</div>
+                  <div className="w-8 sm:w-16 text-center text-xs sm:text-sm font-semibold text-yellow-300">{w.placeLabel}</div>
 
-                  <div className="relative z-10 flex-1 grid grid-cols-[auto_1fr_auto] items-center gap-3 min-w-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12">
-                        <AvatarComposer base={w.avatar.base} skin={w.avatar.skin} face={w.avatar.face} female={w.avatar.female} />
+                  <div className="relative z-10 flex-1 grid grid-cols-[1.6fr_1.2fr_72px] sm:grid-cols-[1.4fr_1.1fr_110px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 sm:gap-3 lg:gap-2 min-w-0">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <div className="w-8 h-8 sm:w-12 sm:h-12">
+                        {/* Mobile: smaller avatar; Desktop: normal size */}
+                        <div className="sm:hidden">
+                          <AvatarComposer base={w.avatar.base} skin={w.avatar.skin} face={w.avatar.face} female={w.avatar.female} size="sm" />
+                        </div>
+                        <div className="hidden sm:block">
+                          <AvatarComposer base={w.avatar.base} skin={w.avatar.skin} face={w.avatar.face} female={w.avatar.female} />
+                        </div>
                       </div>
-                      <h6 className="text-white text-sm font-medium truncate">{w.name}</h6>
+                      <h6 className="text-white text-sm sm:text-base font-medium truncate">{w.name}</h6>
                     </div>
-                    <div className="text-white text-sm font-medium text-center sm:text-right">
+                    <div className="text-white text-xs sm:text-sm font-medium text-left lg:text-center lg:justify-self-center">
                       <span>{w.totalPlayed}</span>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="px-4 py-2 rounded-xl bg-[#e67d00] border-4 border-[#fed81f] text-white font-semibold text-sm shadow-[0_6px_18px_rgba(230,125,0,0.25)]">
+                    <div className="flex items-center gap-2 justify-self-center lg:justify-self-end">
+                      <div className="min-w-[72px] sm:min-w-[110px] px-1.5 sm:px-4 py-1 sm:py-2 rounded-xl bg-[#e67d00] border-[3px] sm:border-4 border-[#fed81f] text-white font-medium text-[11px] sm:text-sm shadow-[0_6px_18px_rgba(230,125,0,0.25)] whitespace-nowrap leading-none flex items-center justify-center text-center">
                         {w.prize}
                       </div>
                     </div>

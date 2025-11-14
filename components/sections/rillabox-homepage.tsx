@@ -20,8 +20,8 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  Target
-} from "lucide-react"
+  Ticket
+  } from "lucide-react"
 import Link from "next/link"
 import { useBoxes } from "@/hooks/use-boxes"
 import { useLiveDrops, useLiveStats } from "@/hooks/use-socket"
@@ -328,6 +328,15 @@ export function OSortudoHomepage() {
       {false && (<section className="w-full mb-8">
         <div className="flex justify-center">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-6xl">
+            {/* Shop - FIRST card using provided image */}
+            <Link href="/" className="group block h-full">
+              <div className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary/50 hover:shadow-2xl transition-all duration-300 h-full group-hover:scale-105 group-hover:shadow-primary/20">
+                <div className="w-full h-32 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                  <img src="/new/storee.png" alt="Shop" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-sm font-bold text-foreground">Shop</span>
+              </div>
+            </Link>
             {/* Mystery Boxes - BIGGER with enhanced box opening animation */}
             <Link href="/boxes" className="group block h-full">
               <div className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary/50 hover:shadow-2xl transition-all duration-300 h-full group-hover:scale-105 group-hover:shadow-primary/20">
@@ -367,7 +376,7 @@ export function OSortudoHomepage() {
             <Link href="/find-prize" className="group block h-full">
               <div className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary/50 hover:shadow-2xl transition-all duration-300 h-full group-hover:scale-105 group-hover:shadow-primary/20">
                 <div className="w-full h-32 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-lg flex items-center justify-center mb-4 group-hover:from-secondary/30 group-hover:to-primary/30 transition-all duration-300 relative overflow-hidden">
-                  <Target className="w-12 h-12 text-secondary group-hover:animate-bounce transition-transform duration-500" />
+                  <Ticket className="w-12 h-12 text-secondary group-hover:animate-bounce transition-transform duration-500" />
                   
                   {/* Enhanced number selection animation */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -426,43 +435,7 @@ export function OSortudoHomepage() {
               </div>
             </Link>
             
-            {/* Chicken Road - BIGGER with enhanced road/car animation */}
-            <Link href="/chicken-road" className="group block h-full">
-              <div className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary/50 hover:shadow-2xl transition-all duration-300 h-full group-hover:scale-105 group-hover:shadow-primary/20">
-                <div className="w-full h-32 bg-gradient-to-br from-chart-3/20 to-chart-4/20 rounded-lg flex items-center justify-center mb-4 group-hover:from-chart-3/30 group-hover:to-chart-4/30 transition-all duration-300 relative overflow-hidden">
-                  <Target className="w-12 h-12 text-chart-3 group-hover:animate-spin transition-transform duration-500" />
-                  
-                  {/* Enhanced road/car animation */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="w-full h-full flex items-end justify-center">
-                      <div className="w-12 h-4 bg-gray-400 rounded-sm relative">
-                        {/* Road lines */}
-                        <div className="absolute top-1 left-2 w-1 h-1 bg-yellow-400 rounded-full animate-ping"></div>
-                        <div className="absolute top-1 left-6 w-1 h-1 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '0.2s' }}></div>
-                        <div className="absolute top-1 right-2 w-1 h-1 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '0.4s' }}></div>
-                        
-                        {/* Car lights */}
-                        <div className="absolute -top-2 left-2 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
-                        <div className="absolute -top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '0.1s' }}></div>
-                        
-                        {/* Moving car effect */}
-                        <div className="absolute -top-1 left-1 w-3 h-2 bg-red-400 rounded-sm animate-pulse"></div>
-                        <div className="absolute -top-1 right-1 w-3 h-2 bg-blue-400 rounded-sm animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                </div>
-                    </div>
-                  </div>
-                  
-                  {/* Road dust effects */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute bottom-2 left-4 w-1 h-1 bg-gray-300 rounded-full animate-ping"></div>
-                    <div className="absolute bottom-2 right-4 w-1 h-1 bg-gray-300 rounded-full animate-ping" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="absolute bottom-4 left-6 w-1 h-1 bg-gray-300 rounded-full animate-ping" style={{ animationDelay: '0.4s' }}></div>
-                    <div className="absolute bottom-4 right-6 w-1 h-1 bg-gray-300 rounded-full animate-ping" style={{ animationDelay: '0.6s' }}></div>
-                  </div>
-                </div>
-                <span className="text-sm font-bold text-foreground group-hover:text-chart-3 transition-colors duration-300">Chicken Road</span>
-              </div>
-            </Link>
+            {/* Chicken Road card removed */}
           </div>
         </div>
       </section>)}
@@ -500,7 +473,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>564.99</span></div>
                 <div className="current-price"><span>$</span><span>469.99</span></div>
               </div>
-              <Link href="/boxes/alfa-romeo" className="absolute inset-0 z-10" aria-label="Open Alfa Romeo"><span className="sr-only">Open Alfa Romeo</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Alfa Romeo"><span className="sr-only">Open Alfa Romeo</span></Link>
             </div>
           </div>
           <div>
@@ -512,7 +485,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>8.49</span></div>
                 <div className="current-price"><span>$</span><span>6.79</span></div>
               </div>
-              <Link href="/boxes/amazon" className="absolute inset-0 z-10" aria-label="Open Amazon"><span className="sr-only">Open Amazon</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Amazon"><span className="sr-only">Open Amazon</span></Link>
             </div>
           </div>
           <div>
@@ -524,7 +497,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>1999.99</span></div>
                 <div className="current-price"><span>$</span><span>1889.99</span></div>
               </div>
-              <Link href="/boxes/bentley" className="absolute inset-0 z-10" aria-label="Open Bentley"><span className="sr-only">Open Bentley</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Bentley"><span className="sr-only">Open Bentley</span></Link>
             </div>
           </div>
           <div>
@@ -536,7 +509,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>7.87</span></div>
                 <div className="current-price"><span>$</span><span>5.79</span></div>
               </div>
-              <Link href="/boxes/call-of-duty" className="absolute inset-0 z-10" aria-label="Open Call Of Duty"><span className="sr-only">Open Call Of Duty</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Call Of Duty"><span className="sr-only">Open Call Of Duty</span></Link>
             </div>
           </div>
           <div>
@@ -548,7 +521,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>10.49</span></div>
                 <div className="current-price"><span>$</span><span>8.29</span></div>
               </div>
-              <Link href="/boxes/holidays" className="absolute inset-0 z-10" aria-label="Open Holidays"><span className="sr-only">Open Holidays</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Holidays"><span className="sr-only">Open Holidays</span></Link>
             </div>
           </div>
           <div>
@@ -560,7 +533,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>2.99</span></div>
                 <div className="current-price"><span>$</span><span>2.24</span></div>
               </div>
-              <Link href="/boxes/india" className="absolute inset-0 z-10" aria-label="Open India"><span className="sr-only">Open India</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open India"><span className="sr-only">Open India</span></Link>
             </div>
           </div>
           <div>
@@ -572,7 +545,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>544.99</span></div>
                 <div className="current-price"><span>$</span><span>484.99</span></div>
               </div>
-              <Link href="/boxes/nissan" className="absolute inset-0 z-10" aria-label="Open Nissan"><span className="sr-only">Open Nissan</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Nissan"><span className="sr-only">Open Nissan</span></Link>
             </div>
           </div>
           <div>
@@ -584,7 +557,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>10.49</span></div>
                 <div className="current-price"><span>$</span><span>8.39</span></div>
               </div>
-              <Link href="/boxes/risky-rolex" className="absolute inset-0 z-10" aria-label="Open Risky Rolex"><span className="sr-only">Open Risky Rolex</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Risky Rolex"><span className="sr-only">Open Risky Rolex</span></Link>
             </div>
           </div>
           <div>
@@ -596,7 +569,7 @@ export function OSortudoHomepage() {
                 <div className="original-price"><span>$</span><span>39.99</span></div>
                 <div className="current-price"><span>$</span><span>33.49</span></div>
               </div>
-              <Link href="/boxes/travis-scott" className="absolute inset-0 z-10" aria-label="Open Travis Scott"><span className="sr-only">Open Travis Scott</span></Link>
+              <Link href="#" className="absolute inset-0 z-10" aria-label="Open Travis Scott"><span className="sr-only">Open Travis Scott</span></Link>
             </div>
           </div>
         </div>
@@ -1209,10 +1182,10 @@ export function OSortudoHomepage() {
         <div className="rounded-xl border border-[#1f6b4a] bg-gradient-to-r from-[#0a1b14] via-[#0d241b] to-[#0a1b14] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0 mx-auto sm:mx-0">
-              <div className="w-12 h-12 md:w-8 md:h-8 rounded-lg bg-[#0f2a1f] border border-[#1f6b4a] flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 md:w-4 md:h-4 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>
+              <div className="w-14 h-14 md:w-10 md:h-10 rounded-lg bg-[#22c55e] border border-[#1f6b4a] flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 md:w-6 md:h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>
               </div>
-              <span className="text-2xl md:text-base font-semibold text-foreground text-center sm:text-left">Payment Methods</span>
+              <span className="text-xl md:text-base font-semibold text-foreground text-center sm:text-left">Payment Methods</span>
             </div>
             {/* Mobile: compact 4x2 grid with smaller logos */}
             <div className="w-full sm:w-auto sm:hidden">

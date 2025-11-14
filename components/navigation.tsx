@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Home, Gift, Trophy, Coins, Menu, X, User, LogOut, ShoppingCart, ArrowLeftRight, Boxes, Target, Egg, DollarSign, ShoppingBag, ChevronDown } from "lucide-react"
+import { Home, Gift, Trophy, Coins, Menu, X, User, LogOut, ShoppingCart, ArrowLeftRight, Boxes, Ticket, DollarSign, ShoppingBag, ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginDialog } from "@/components/auth/login-dialog"
 import { RegisterDialog } from "@/components/auth/register-dialog"
@@ -14,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mobileGamesOpen, setMobileGamesOpen] = useState(false)
+  const [mobileGamesClosing, setMobileGamesClosing] = useState(false)
   const [mobileShopOpen, setMobileShopOpen] = useState(false)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [showRegisterDialog, setShowRegisterDialog] = useState(false)
@@ -59,9 +61,49 @@ export function Navigation() {
   // Listen for bottom nav "Games" tab across pages
   useEffect(() => {
     const openHandler = () => setMobileGamesOpen(true)
+    const closeHandler = () => closeMobileGames()
     window.addEventListener("open-games-menu", openHandler as EventListener)
-    return () => window.removeEventListener("open-games-menu", openHandler as EventListener)
+    window.addEventListener("close-games-menu", closeHandler as EventListener)
+    return () => {
+      window.removeEventListener("open-games-menu", openHandler as EventListener)
+      window.removeEventListener("close-games-menu", closeHandler as EventListener)
+    }
   }, [])
+
+  // Unified close that also notifies bottom nav to reset Games highlight
+  const closeMobileGames = useCallback(() => {
+    // trigger slide-out animation before unmount
+    setMobileGamesClosing(true)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("close-games-menu"))
+    }
+    // wait for animation to finish
+    setTimeout(() => {
+      setMobileGamesOpen(false)
+      setMobileGamesClosing(false)
+    }, 300)
+  }, [])
+
+  // Auto-close mobile games overlay when the route changes (e.g., bottom nav navigation)
+  const pathname = usePathname()
+  useEffect(() => {
+    if (mobileGamesOpen) {
+      closeMobileGames()
+    }
+  }, [pathname])
+
+  // Lock background scroll when the mobile Games overlay is open
+  useEffect(() => {
+    const shouldLock = mobileGamesOpen || mobileGamesClosing
+    if (shouldLock) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileGamesOpen, mobileGamesClosing])
 
   const handleSwitchToRegister = () => {
     setShowLoginDialog(false)
@@ -289,10 +331,10 @@ export function Navigation() {
       </nav>
 
       {/* Mobile full-screen Games menu (used on pages with Navigation header) */}
-      {mobileGamesOpen && (
+      {(mobileGamesOpen || mobileGamesClosing) && (
         <>
-          <div className="fixed inset-0 bg-black/20 z-[60] md:hidden" onClick={() => setMobileGamesOpen(false)} />
-          <aside className="fixed inset-0 h-full w-full bg-card/95 backdrop-blur-sm z-[65] md:hidden shadow-xl">
+          <div className="fixed inset-0 bg-black/30 z-[75] md:hidden" onClick={closeMobileGames} />
+          <aside className={`fixed inset-0 h-full w-full bg-card/95 backdrop-blur-sm z-[80] md:hidden shadow-xl transform transition-transform duration-300 ${mobileGamesClosing ? '-translate-x-full' : 'translate-x-0'}`}>
             <div className="flex items-center justify-between p-4 border-b border-border">
               <Link href="/" className="inline-flex items-center">
                 <img src="/logo/OSORTUDO%20LOGO%201.png" alt="Sortudo" className="h-6 w-auto object-contain" />
@@ -317,37 +359,30 @@ export function Navigation() {
                     </Button>
                   </>
                 ) : null}
-                <Button variant="ghost" size="icon" onClick={() => setMobileGamesOpen(false)} aria-label="Close menu">
+                <Button variant="ghost" size="icon" onClick={closeMobileGames} aria-label="Close menu">
                   <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
-            <div className="px-4 pt-3.5 pb-3.5 overflow-y-auto h-[calc(100vh-64px)]">
+            <div className="px-4 pt-3.5 pb-[env(safe-area-inset-bottom)] overflow-hidden h-full">
               <div className="grid grid-cols-1">
-                <Link href="/boxes" className="block"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><Boxes className="w-5 h-5 mr-2" />Mystery Boxes</Button></Link>
-                <Link href="#" className="block"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><Target className="w-5 h-5 mr-2" />Find the Prize</Button></Link>
+                <Link href="/boxes" className="block" onClick={closeMobileGames}><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><Boxes className="w-5 h-5 mr-2" />Mystery Boxes</Button></Link>
+                <Link href="#" className="block"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><Ticket className="w-5 h-5 mr-2" />Find the Prize</Button></Link>
                 <Button
                   variant="outline"
-                  className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"
-                  onClick={() => setMobileGamesOpen(false)}
+                  className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"
+                  onClick={closeMobileGames}
                 >
                   <span className="flex items-center"><img src="/new/soccer2.png" alt="Soccer" className="w-5 h-5 mr-2 object-contain" />Soccer Game</span>
                   <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">Coming Soon</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"
-                  onClick={() => setMobileGamesOpen(false)}
-                >
-                  <span className="flex items-center"><Egg className="w-5 h-5 mr-2" />Chicken Road</span>
-                  <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">Coming Soon</span>
-                </Button>
-                <Link href="/earn" className="block"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><DollarSign className="w-5 h-5 mr-2" />Earn to Play</Button></Link>
+                {/** Chicken Road removed from mobile games menu **/}
+                <Link href="/earn" className="block" onClick={closeMobileGames}><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><DollarSign className="w-5 h-5 mr-2" />Earn to Play</Button></Link>
 
                 {/* Shop collapsible */}
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between rounded-2xl bg-card border border-border px-4 py-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors min-h-[56px] mb-3.5"
+                  className="w-full flex items-center justify-between rounded-2xl bg-card border border-green-400/40 hover:border-green-400/60 px-4 py-4 text-sm hover:bg-accent hover:!text-[#52CA19] transition-colors min-h-[56px] mb-3.5"
                   onClick={() => setMobileShopOpen((v) => !v)}
                   aria-expanded={mobileShopOpen}
                 >
@@ -357,13 +392,14 @@ export function Navigation() {
                 {mobileShopOpen && (
                   <div className="pl-6 border-l border-border ml-2">
                     <Link href="#" className="block">
-                      <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5 hover:!text-[#52CA19] transition-colors">
                         <ShoppingBag className="w-4 h-4 mr-2" />
                         Buy
                       </Button>
                     </Link>
+                    <div className="h-px bg-white/70 rounded-full mx-4 mb-3" />
                     <Link href="#" className="block">
-                      <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5 hover:!text-[#52CA19] transition-colors">
                         <ArrowLeftRight className="w-4 h-4 mr-2" />
                         Trade
                       </Button>

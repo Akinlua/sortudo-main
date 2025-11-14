@@ -291,13 +291,13 @@ export default function IPhoneBoxPage() {
     filter.type = 'lowpass'
     filter.frequency.value = 1200
     gain.gain.setValueAtTime(0.0001, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + 0.012)
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07)
+    gain.gain.exponentialRampToValueAtTime(0.20, ctx.currentTime + 0.008)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.030)
     osc.connect(filter)
     filter.connect(gain)
     gain.connect(ctx.destination)
     osc.start()
-    osc.stop(ctx.currentTime + 0.08)
+    osc.stop(ctx.currentTime + 0.034)
   }
 
   const handleFastSpin = () => {
@@ -385,17 +385,19 @@ export default function IPhoneBoxPage() {
     const startIndices = columnsData.map(col => Math.floor(col.length / 2))
     const currentIndices = [...startIndices]
 
-    // Two-phase timing: 3s very fast, then ~4s deceleration to the target with a slow tail
-    const fastDurationMs = 3000
-    const fastIntervalMs = 16 // ~60fps for smooth fast movement
+    // Timing tuned for device and demo vs real spins
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
+    // Demo on mobile: slower intervals and longer deceleration for visibility
+    const fastIntervalMs = isDemo && isMobile ? 40 : 16
+    const fastDurationMs = isDemo && isMobile ? 2500 : 3000
     const fastSteps = Math.floor(fastDurationMs / fastIntervalMs)
 
-    const decelDurationMs = 4000
-    const endMaxIntervalMs = 280 // slower final step interval for more natural stop
+    const decelDurationMs = isDemo && isMobile ? 5200 : 4000
+    const endMaxIntervalMs = isDemo && isMobile ? 380 : 280 // slower final step interval for more natural stop
     // Faster early reduction: easeOutExpo grows quickly at the start
     const easeOutExpo = (t: number) => (t === 0 ? 0 : 1 - Math.pow(2, -10 * t))
     // Build deceleration interval schedule and scale to exactly decelDurationMs
-    const slowSteps = 85 // more steps during deceleration for smoother, longer slowdown
+    const slowSteps = isDemo && isMobile ? 105 : 85 // more steps during deceleration for smoother, longer slowdown
     const rawIntervals = Array.from({ length: slowSteps }, (_, i) => {
       const t = i / (slowSteps - 1)
       return fastIntervalMs + (endMaxIntervalMs - fastIntervalMs) * easeOutExpo(t)
@@ -404,7 +406,7 @@ export default function IPhoneBoxPage() {
     const scale = decelDurationMs / rawSum
     const decelIntervals = rawIntervals.map(v => Math.max(8, v * scale))
     // Final tail to bring perceived speed near-zero without feeling abrupt
-    const tailIntervals = [300, 340, 380]
+    const tailIntervals = isDemo && isMobile ? [340, 380, 420] : [300, 340, 380]
     const totalSlowSteps = slowSteps + tailIntervals.length
 
     // Select different winning items for each column
@@ -460,7 +462,11 @@ export default function IPhoneBoxPage() {
       }
 
       setColumnSpinIndices([...currentIndices])
-      playClick()
+      // Only play the tick sound while the columns are still moving.
+      // This prevents an extra click right after the winning item lands.
+      if (!allLanded) {
+        playClick()
+      }
 
       // Compute next interval based on phase
       let nextInterval = fastIntervalMs
@@ -474,13 +480,8 @@ export default function IPhoneBoxPage() {
         }
       }
 
-      // Match transition duration to interval for smooth continuous movement
-      if (step >= fastSteps) {
-        setSpinStepDurationMs(Math.min(420, Math.max(80, Math.floor(nextInterval))))
-      } else {
-        // Keep short transitions during fast phase so updates feel fluid
-        setSpinStepDurationMs(60)
-      }
+      // Match transition duration to interval at all phases to avoid mid-spin speed bumps
+      setSpinStepDurationMs(Math.min(460, Math.max(16, Math.floor(nextInterval))))
 
       step++
 
@@ -722,8 +723,8 @@ export default function IPhoneBoxPage() {
                     position: 'relative',
                     left: '50%',
                     transform: (isSpinning || wonPrizes.length > 0) && columnSpinIndices[0] !== undefined
-                      ? `translateX(calc(-${columnSpinIndices[0] * H_ITEM_STEP_PX}px - ${H_HALF_ITEM_STEP_PX}px))`
-                      : `translateX(calc(-${10 * H_ITEM_STEP_PX}px - ${H_HALF_ITEM_STEP_PX}px))`,
+                      ? `translate3d(calc(-${columnSpinIndices[0] * H_ITEM_STEP_PX}px - ${H_HALF_ITEM_STEP_PX}px), 0, 0)`
+                      : `translate3d(calc(-${10 * H_ITEM_STEP_PX}px - ${H_HALF_ITEM_STEP_PX}px), 0, 0)`,
                     width: ((isSpinning || wonPrizes.length > 0) && columnItems[0]) ? `${columnItems[0].length * H_ITEM_STEP_PX}px` : 'auto',
                     transitionProperty: (isSpinning || wonPrizes.length > 0) ? 'transform' : undefined,
                     transitionTimingFunction: (isSpinning || wonPrizes.length > 0) ? 'cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
@@ -832,8 +833,8 @@ export default function IPhoneBoxPage() {
                           className={`flex flex-col items-center`}
                           style={{
                             transform: (isSpinning || wonPrizes.length > 0)
-                              ? `translateY(calc(50% - ${spinIndex * ITEM_STEP_PX}px - ${HALF_ITEM_STEP_PX}px))`
-                              : `translateY(calc(50% - ${halfList}px))`,
+                              ? `translate3d(0, calc(50% - ${spinIndex * ITEM_STEP_PX}px - ${HALF_ITEM_STEP_PX}px), 0)`
+                              : `translate3d(0, calc(50% - ${halfList}px), 0)`,
                             transitionProperty: (isSpinning || wonPrizes.length > 0) ? 'transform' : undefined,
                             transitionTimingFunction: (isSpinning || wonPrizes.length > 0) ? 'cubic-bezier(0.22, 1, 0.36, 1)' : undefined,
                             transitionDuration: (isSpinning || wonPrizes.length > 0) ? `${spinStepDurationMs}ms` : undefined,
@@ -989,7 +990,7 @@ export default function IPhoneBoxPage() {
                 <Gift className="w-4 h-4 mr-2" />
                 Open for ${(2.79 * quantity).toFixed(2)}
               </Button>
-              <Button
+              {/* <Button
                 onClick={handleFastSpin}
                 className={`px-3 py-3 rounded-lg border-0 transition-all sm:w-auto ${isFastSpin
                     ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
@@ -997,7 +998,7 @@ export default function IPhoneBoxPage() {
                   }`}
               >
                 <Zap className={`w-4 h-4 ${isFastSpin ? 'animate-pulse' : ''}`} />
-              </Button>
+              </Button> */}
             </div>
 
             {/* Quantity Selection */}
@@ -1082,7 +1083,7 @@ export default function IPhoneBoxPage() {
 
             <div className="boxes-container landing-boxes grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {similarBoxes.map((box) => (
-                <Link key={box.id} href={`/boxes/${box.id}`} className="box-item relative">
+                <Link key={box.id} href={`#`} className="box-item relative">
                   {/* <img src="/images/helloween/vector-3.svg" alt="" className="vector-halloween" /> */}
                   <span className="box-name line-clamp-2">{box.name}</span>
                   <img src={box.image} alt={box.name} className="prod-img" onError={(e) => { e.currentTarget.src = '/placeholder.svg' }} />
@@ -1153,10 +1154,10 @@ export default function IPhoneBoxPage() {
             <div className="rounded-xl border border-[#1f6b4a] bg-gradient-to-r from-[#0a1b14] via-[#0d241b] to-[#0a1b14] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0 mx-auto sm:mx-0">
-                  <div className="w-12 h-12 md:w-8 md:h-8 rounded-lg bg-[#0f2a1f] border border-[#1f6b4a] flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 md:w-4 md:h-4 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>
+                  <div className="w-14 h-14 md:w-10 md:h-10 rounded-lg bg-[#22c55e] border border-[#1f6b4a] flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 md:w-6 md:h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="9" x2="22" y2="9"></line></svg>
                   </div>
-                  <span className="text-2xl md:text-base font-semibold text-foreground text-center sm:text-left">Payment Methods</span>
+                  <span className="text-xl md:text-base font-semibold text-foreground text-center sm:text-left">Payment Methods</span>
                 </div>
                 <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-end">
                   {[

@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoginDialog } from "@/components/auth/login-dialog"
 import { RegisterDialog } from "@/components/auth/register-dialog"
@@ -29,7 +30,7 @@ function FootballIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-import { Home, Gift, Trophy, Gamepad2, Boxes, LogOut, Zap, Menu, X, DollarSign, ShoppingBag, ShoppingCart, ArrowLeftRight, Target, Egg, Goal, ChevronDown } from "lucide-react"
+import { Home, Gift, Trophy, Gamepad2, Boxes, LogOut, Zap, Menu, X, DollarSign, ShoppingBag, ShoppingCart, ArrowLeftRight, Ticket, Goal, ChevronDown } from "lucide-react"
 
 export function RillaboxHeader() {
   const { user, isAuthenticated, logout } = useAuth()
@@ -37,6 +38,7 @@ export function RillaboxHeader() {
   const [showRegisterDialog, setShowRegisterDialog] = useState(false)
   const [gamesOpen, setGamesOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuClosing, setMobileMenuClosing] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const gamesCloseRef = useRef<number | null>(null)
   const shopCloseRef = useRef<number | null>(null)
@@ -95,6 +97,27 @@ export function RillaboxHeader() {
     return () => clearInterval(id)
   }, [])
 
+  // Close mobile full-screen menu when path changes to avoid overlay persisting after navigation
+  const pathname = usePathname()
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      closeMobileMenu()
+    }
+  }, [pathname])
+
+  // Unified close for mobile games menu that also notifies bottom nav
+  const closeMobileMenu = useCallback(() => {
+    // animate slide-out left before unmounting
+    setMobileMenuClosing(true)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("close-games-menu"))
+    }
+    setTimeout(() => {
+      setMobileMenuOpen(false)
+      setMobileMenuClosing(false)
+    }, 300)
+  }, [])
+
   const handleSwitchToRegister = () => {
     setShowLoginDialog(false)
     setShowRegisterDialog(true)
@@ -117,29 +140,45 @@ export function RillaboxHeader() {
     }
   }
 
-  // Listen for bottom nav requests to open the Games menu
+  // Listen for bottom nav requests to open/close the Games menu
   useEffect(() => {
     const openGamesHandler = () => setMobileMenuOpen(true)
-    // Custom event triggered from mobile bottom nav
+    const closeGamesHandler = () => setMobileMenuOpen(false)
+    // Custom events triggered from mobile bottom nav
     window.addEventListener("open-games-menu", openGamesHandler as EventListener)
+    window.addEventListener("close-games-menu", closeGamesHandler as EventListener)
     return () => {
       window.removeEventListener("open-games-menu", openGamesHandler as EventListener)
+      window.removeEventListener("close-games-menu", closeGamesHandler as EventListener)
     }
   }, [])
+
+  // Lock background scroll while the mobile full-screen menu is open
+  useEffect(() => {
+    const shouldLock = mobileMenuOpen || mobileMenuClosing
+    if (shouldLock) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen, mobileMenuClosing])
 
   return (
     <>
       <header id="header" className="sticky top-0 z-50 border-b border-border relative bg-card lg:bg-card/95 lg:backdrop-blur-sm">
         {/* Absolute logo so nav starts at content edge */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center w-[180px]">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden xl:flex items-center justify-center w-[180px]">
           <Link href="/" className="inline-flex items-center">
             <img src="/logo/OSORTUDO%20LOGO%201.png" alt="Sortudo" className="h-10 md:h-11 lg:h-12 w-auto object-contain" />
           </Link>
         </div>
 
-        <div className="max-w-6xl mx-auto flex items-center px-4 sm:px-6 lg:px-8 h-16 lg:pl-[205px]">
+        <div className="max-w-6xl mx-auto flex items-center px-4 sm:px-6 lg:px-8 h-16 xl:pl-[205px]">
           {/* Mobile: Big logo with compact Sign in / Sign up on right */}
-          <div className="lg:hidden flex items-center justify-between w-full">
+          <div className="xl:hidden flex items-center justify-between w-full">
             {/* Left: Bigger wordmark */}
             <Link href="/" className="inline-flex items-center">
               <img src="/logo/OSORTUDO%20LOGO%201.png" alt="Sortudo" className="h-10 w-auto object-contain" />
@@ -192,16 +231,16 @@ export function RillaboxHeader() {
           {/* Right: Menu and actions */}
           <div className="flex flex-grow items-center header-rightbox relative">
             {/* Left-aligned navigation cluster */}
-            <div className="hidden lg:flex items-center gap-3 absolute left-1/2 -translate-x-1/2 -ml-[250px]">
+            <div className="hidden xl:flex items-center gap-3 absolute left-1/2 -translate-x-1/2 -ml-[250px]">
               {/* Desktop Home button */}
-              <Link href="/" className="hidden lg:inline-flex items-center justify-center">
+              <Link href="/" className="hidden xl:inline-flex items-center justify-center">
                 <Button variant="outline" size="icon" className="home-btns home-btn transition hover:-translate-y-[1px] hover:text-[#52CA19] hover:border-[#52CA19]/50 hover:shadow-[0_0_10px_rgba(82,202,25,0.35)]">
                   <Home className="w-4 h-4" />
                 </Button>
               </Link>
 
               {/* Desktop Games dropdown (hover to open, no flicker) */}
-              <div className="hidden lg:block relative group">
+              <div className="hidden xl:block relative group">
                 <Button variant="outline" className="flex items-center gap-2 transition hover:text-[#52CA19] hover:border-[#52CA19]/50 hover:shadow-[0_0_10px_rgba(82,202,25,0.35)]">
                   <Gamepad2 className="w-4 h-4" />
                   <span>Games</span>
@@ -213,7 +252,7 @@ export function RillaboxHeader() {
                     <span>Mystery Boxes</span>
                   </Link>
                   <Link href="#" className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-sm">
-                    <Target className="w-4 h-4" />
+                    <Ticket className="w-4 h-4" />
                     <span>Find the Prize</span>
                   </Link>
                   <Link href="#" className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-sm">
@@ -221,15 +260,12 @@ export function RillaboxHeader() {
                     <img src="/new/soccer2.png" alt="Soccer" className="w-5 h-5 object-contain" />
                     <span>Soccer Game</span>
                   </Link>
-                  <Link href="#" className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-sm">
-                    <Egg className="w-4 h-4" />
-                    <span>Chicken Road</span>
-                  </Link>
+                  {/** Chicken Road removed from header dropdown **/}
                 </div>
               </div>
 
               {/* Earn to Play (moved to mobile drawer) */}
-              <Link href="/" className="hidden lg:inline-flex">
+              <Link href="/" className="hidden xl:inline-flex">
                 <Button variant="outline" className="group flex items-center gap-2 transition hover:-translate-y-[1px] hover:text-[#52CA19] hover:border-[#52CA19]/50 hover:shadow-[0_0_10px_rgba(82,202,25,0.35)]">
                   <DollarSign className="w-4 h-4" />
                   <span className="text-white group-hover:text-[#52CA19]">Earn to Play</span>
@@ -237,7 +273,7 @@ export function RillaboxHeader() {
               </Link>
 
               {/* Shop dropdown: Buy / Trade (hover to open) */}
-              <div className="hidden lg:block relative group">
+              <div className="hidden xl:block relative group">
                 <Button variant="outline" className="flex items-center gap-2 transition hover:text-[#52CA19] hover:border-[#52CA19]/50 hover:shadow-[0_0_10px_rgba(82,202,25,0.35)]">
                   <ShoppingBag className="w-4 h-4" />
                   <span>Shop</span>
@@ -248,6 +284,7 @@ export function RillaboxHeader() {
                     <ShoppingCart className="w-4 h-4" />
                     <span>Buy</span>
                   </Link>
+                  <div className="h-px bg-white/70 mx-2" />
                   <Link href="/" className="cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-sm">
                     <ArrowLeftRight className="w-4 h-4" />
                     <span>Trade</span>
@@ -256,7 +293,7 @@ export function RillaboxHeader() {
               </div>
 
               {/* Weekly race banner */}
-              <Link href="/weekly-race" title="10k Race" className="hidden lg:flex group items-center overflow-hidden flex-shrink-0 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#fed81f] to-[#e67d00] border-4 border-[#e67d00] transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-amber-500/30">
+              <Link href="/weekly-race" title="10k Race" className="hidden xl:flex group items-center overflow-hidden flex-shrink-0 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#fed81f] to-[#e67d00] border-4 border-[#e67d00] transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-amber-500/30">
                 <Trophy className="w-5 h-5 text-amber-700 mr-2 group-hover:animate-bounce" />
                 <div className="flex items-center gap-2">
                   <span className="text-white font-semibold not-italic">$10k Race</span>
@@ -287,7 +324,7 @@ export function RillaboxHeader() {
             </div>
 
             {/* Right-aligned auth cluster */}
-            <div className="hidden lg:flex items-center gap-2 ml-auto">
+            <div className="hidden xl:flex items-center gap-2 ml-auto">
                 {!isAuthenticated ? (
                   <>
                     <Button variant="outline" size="sm" className="button-sign-in transition hover:-translate-y-[2px] hover:text-[#52CA19] hover:border-[#52CA19]/50 hover:shadow-[0_0_10px_rgba(82,202,25,0.35)]" onClick={() => setShowLoginDialog(true)}>Sign in</Button>
@@ -323,11 +360,11 @@ export function RillaboxHeader() {
             {gamesOpen && <div className="dropdown-overlay fixed inset-0 z-40" onClick={() => setGamesOpen(false)} />}
           </div>
 
-          {/* Mobile full-screen Games menu */}
-          {mobileMenuOpen && (
+  {/* Mobile full-screen Games menu with slide-out close animation */}
+  {(mobileMenuOpen || mobileMenuClosing) && (
             <>
-              <div className="fixed inset-0 bg-black/20 z-[60] lg:hidden" onClick={() => setMobileMenuOpen(false)} />
-              <aside className="fixed inset-0 h-full w-full bg-card/95 backdrop-blur-sm z-[65] lg:hidden shadow-xl">
+              <div className="fixed inset-0 bg-black/30 z-[75] xl:hidden" onClick={closeMobileMenu} />
+              <aside className={`fixed inset-0 h-full w-full bg-card/95 backdrop-blur-sm z-[80] xl:hidden shadow-xl transform transition-transform duration-300 ${mobileMenuClosing ? '-translate-x-full' : 'translate-x-0'}`}>
                 <div className="flex items-center justify-between p-4 border-b border-border">
                   <Link href="/" className="inline-flex items-center">
                     <img src="/logo/OSORTUDO%20LOGO%201.png" alt="Sortudo" className="h-6 w-auto object-contain" />
@@ -352,42 +389,35 @@ export function RillaboxHeader() {
                         </Button>
                       </>
                     ) : null}
-                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+                    <Button variant="ghost" size="icon" onClick={closeMobileMenu} aria-label="Close menu">
                       <X className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
-                <div className="px-4 pt-3.5 pb-3.5 overflow-y-auto h-[calc(100vh-64px)]">
+            <div className="px-4 pt-3.5 pb-[env(safe-area-inset-bottom)] overflow-hidden h-full">
                   <div>
-                    <Link href="/boxes"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><Boxes className="w-5 h-5 mr-2" />Mystery Boxes</Button></Link>
-                    <Link href="#"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><Target className="w-5 h-5 mr-2" />Find the Prize</Button></Link>
+                    <Link href="/boxes" onClick={closeMobileMenu}><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><Boxes className="w-5 h-5 mr-2" />Mystery Boxes</Button></Link>
+                    <Link href="#" ><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><Ticket className="w-5 h-5 mr-2" />Find the Prize</Button></Link>
                     <Button
                       variant="outline"
-                      className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"
-                      onClick={() => {
-                        if (typeof window !== "undefined") {
-                          window.dispatchEvent(new Event("open-soccer-coming-soon"))
-                        }
-                        setMobileMenuOpen(false)
-                      }}
+                      className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"
+                      // onClick={() => {
+                      //   if (typeof window !== "undefined") {
+                      //     window.dispatchEvent(new Event("open-soccer-coming-soon"))
+                      //   }
+                      //   closeMobileMenu()
+                      // }}
                     >
                       <span className="flex items-center"><img src="/new/soccer2.png" alt="Soccer" className="w-5 h-5 mr-2 object-contain" />Soccer Game</span>
                       <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">Coming Soon</span>
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="flex items-center"><Egg className="w-4 h-4 mr-2" />Chicken Road</span>
-                      <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">Coming Soon</span>
-                    </Button>
-                    <Link href="/earn"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground hover:bg-accent hover:text-accent-foreground border-border mb-3.5"><DollarSign className="w-5 h-5 mr-2" />Earn to Play</Button></Link>
+                    {/** Chicken Road removed from mobile menu **/}
+                    <Link href="#"><Button variant="outline" className="w-full justify-start min-h-[56px] px-4 py-4 rounded-2xl bg-card text-foreground border border-green-400/40 dark:border-green-400/40 hover:border-green-400/60 dark:hover:border-green-400/60 hover:bg-accent hover:!text-[#52CA19] transition-colors mb-3.5"><DollarSign className="w-5 h-5 mr-2" />Earn to Play</Button></Link>
 
                     {/* Shop collapsible below Earn to Play */}
                     <button
                       type="button"
-                      className="w-full flex items-center justify-between rounded-2xl bg-card border border-border px-4 py-4 text-sm hover:bg-accent hover:text-accent-foreground transition-colors min-h-[56px] mb-3.5"
+                      className="w-full flex items-center justify-between rounded-2xl bg-card border border-green-400/40 hover:border-green-400/60 px-4 py-4 text-sm hover:bg-accent hover:!text-[#52CA19] transition-colors min-h-[56px] mb-3.5"
                       onClick={() => setMobileShopOpen((v) => !v)}
                       aria-expanded={mobileShopOpen}
                     >
@@ -397,19 +427,20 @@ export function RillaboxHeader() {
                     {mobileShopOpen && (
                       <div className="pl-6 border-l border-border ml-2">
                         <Link href="#">
-                          <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5">
+                          <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5 hover:!text-[#52CA19] transition-colors">
                             <ShoppingBag className="w-4 h-4 mr-2" />
                             Buy
                           </Button>
                         </Link>
+                        <div className="h-px bg-white/70 rounded-full mx-4 mb-3" />
                         <Link href="#">
-                          <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5">
+                          <Button variant="ghost" className="w-full justify-start rounded-xl px-4 py-2.5 mb-3.5 hover:!text-[#52CA19] transition-colors">
                             <ArrowLeftRight className="w-4 h-4 mr-2" />
                             Trade
                           </Button>
                         </Link>
                       </div>
-                    )}
+  )}
 
                     {/* Weekly Race 10k banner (mobile) */}
                     <Link href="/weekly-race" title="$10k Race" className="flex group items-center overflow-hidden flex-shrink-0 w-full px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#fed81f] to-[#e67d00] border-2 border-[#e67d00] transition-all duration-300">
